@@ -2,48 +2,66 @@ import click
 from heaume_cli.utils.console import console
 from heaume_cli.utils.influxdb import query
 import pendulum
+from pandas import DataFrame
 
 @click.command()
-@click.option('--name', prompt='The name of the plant')
-def status(name):
+@click.option('--name', help='The name of the plant', required=True)
+@click.option('--type',  help='The output representation', default="nice", type=click.Choice(['nice', 'csv'], case_sensitive=False), show_default=True)
+def status(name, type):
     """
-    The status command gives the latest values from a plant
+    The status command gives the latest values from a plant.
     """
-    tables = query(
+    metrics = query(
         f"""
         from(bucket: "Plant")
             |> range(start: -1d)
-            |> filter(fn: (r) => r._measurement == "{name}")
+            |> filter(fn: (r) => r.name == "{name}")
             |> sort(columns: ["_time"], desc: true)
+            |> keep(columns: ["_measurement", "_time", "_value", "unit"])
             |> limit(n: 1)
         """
     )
-
-    metrics = dict()
-    unit = {"moisture": "%", "luminosity": "%", "temperature": "°C"}
-
-    if tables:
-        for table in tables:
-            try:
-                record = table.records[0]
-                date = record["_time"]
-                field = record["_field"]
-                value = record["_value"]
-                metrics[field] = f"{value:.2f}"
-            except IndexError:
-                date = None
+    
+    if type == "csv":
+        print_csv(metrics)
     else:
-        date = None
+        print_beautify(name, metrics)
 
-    console.print(f"[bold green]:herb:[/bold green] Status of {name.capitalize()}")
+def print_csv(metrics: DataFrame) -> None:
+    """
+    Print the status of a plant in CSV.
 
-    if date:
-        max_key_size = max([len(m) for m in metrics.keys()])
-        for key, value in metrics.items():
-            str_key = key + " " * (max_key_size - len(key))
-            console.print(f"   {str_key} > {value} {unit[key]}")
-        ago = pendulum.instance(date).diff_for_humans()
-    else:
-        ago = "More than one day"
+    :param metrics: The metrics of the plant.
+    :type metrics: DataFrame
+    """
+    if not metrics.size:
+        console.print("null")
+        return
 
-    console.print(f"[bold u]Last update:[/bold u] {ago}")
+    console.print(metrics.to_csv(index=False)[:-1])
+
+def print_beautify(name: str, metrics: DataFrame) -> None:
+    """
+    Print the status of a plant in a nice way.
+
+    :param name: The name of the plant.
+    :type name: str
+    :param metrics: The metrics of the plant.
+    :type metrics: DataFrame
+    """
+    if not metrics.size:
+        console.print(f"The plant named {name} doesn't exists.")
+        return
+
+    header = f"[bold green]:herb:[/bold green] Status of {name.capitalize()}"
+    last_time = pendulum.instance(metrics.iloc[0]["time"]).diff_for_humans() if metrics.size > 0 else "More than one day"
+    spacing_measurement = max([len(m) for m in metrics["measurement"]])
+
+    console.print(header)
+    for row in metrics.itertuples():
+        measurement = row.measurement
+        value = row.value
+        unit = row.unit
+        title = measurement + " " * (spacing_measurement - len(measurement))
+        console.print(f"   {title} > {value} {unit}")
+    console.print(f"[bold u]Last update:[/bold u] {last_time}")

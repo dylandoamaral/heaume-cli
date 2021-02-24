@@ -11,6 +11,7 @@ influxdb-client = "^1.14.0"
 rich = "^9.10.0"
 pendulum = "^2.1.2"
 isort = "^5.7.0"
+pandas = "^1.2.2"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
