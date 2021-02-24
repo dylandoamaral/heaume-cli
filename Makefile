@@ -9,7 +9,8 @@ format:
 
 tidy: isort format
 
-check: lint
+check:
+	@poetry run pylint heaume_cli tests
 	@poetry run black heaume_cli tests --check
 	@poetry run isort heaume_cli tests --check
 
