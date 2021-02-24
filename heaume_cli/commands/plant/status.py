@@ -1,12 +1,20 @@
 import click
-from heaume_cli.utils.console import console
-from heaume_cli.utils.influxdb import query
 import pendulum
 from pandas import DataFrame
 
+from heaume_cli.utils.console import console
+from heaume_cli.utils.influxdb import query
+
+
 @click.command()
-@click.option('--name', help='The name of the plant', required=True)
-@click.option('--type',  help='The output representation', default="nice", type=click.Choice(['nice', 'csv'], case_sensitive=False), show_default=True)
+@click.option("--name", help="The name of the plant", required=True)
+@click.option(
+    "--type",
+    help="The output representation",
+    default="nice",
+    type=click.Choice(["nice", "csv"], case_sensitive=False),
+    show_default=True,
+)
 def status(name, type):
     """
     The status command gives the latest values from a plant.
@@ -21,11 +29,12 @@ def status(name, type):
             |> limit(n: 1)
         """
     )
-    
+
     if type == "csv":
         print_csv(metrics)
     else:
         print_beautify(name, metrics)
+
 
 def print_csv(metrics: DataFrame) -> None:
     """
@@ -39,6 +48,7 @@ def print_csv(metrics: DataFrame) -> None:
         return
 
     console.print(metrics.to_csv(index=False)[:-1])
+
 
 def print_beautify(name: str, metrics: DataFrame) -> None:
     """
@@ -54,7 +64,11 @@ def print_beautify(name: str, metrics: DataFrame) -> None:
         return
 
     header = f"[bold green]:herb:[/bold green] Status of {name.capitalize()}"
-    last_time = pendulum.instance(metrics.iloc[0]["time"]).diff_for_humans() if metrics.size > 0 else "More than one day"
+    last_time = (
+        pendulum.instance(metrics.iloc[0]["time"]).diff_for_humans()
+        if metrics.size > 0
+        else "More than one day"
+    )
     spacing_measurement = max([len(m) for m in metrics["measurement"]])
 
     console.print(header)

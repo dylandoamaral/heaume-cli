@@ -1,6 +1,9 @@
+"""The main file of the Heaume CLI"""
 import click
 import pendulum
+
 from heaume_cli.commands.plant import plant
+
 
 @click.group()
 def heaume():
@@ -9,7 +12,7 @@ def heaume():
 
     Use 'heaume' to start
     """
-    pass
+
 
 heaume.add_command(plant)
 heaume()

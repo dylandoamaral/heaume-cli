@@ -1,12 +1,14 @@
-from influxdb_client import InfluxDBClient
 import os
+
+from influxdb_client import InfluxDBClient
 from pandas import DataFrame
 
 influx_client = InfluxDBClient(
     url=os.environ["HEAUME_INFLUXDB_URL"],
     token=os.environ["HEAUME_INFLUXDB_TOKEN"],
-    org="Heaume"
+    org="Heaume",
 )
+
 
 def query(query: str) -> DataFrame:
     """
@@ -21,5 +23,7 @@ def query(query: str) -> DataFrame:
     result = influx.query_data_frame(query)
     if result.size:
         result = result.drop(["result", "table"], axis=1)
-        result = result.rename(columns={"_time": "time", "_value": "value", "_measurement": "measurement"})
+        result = result.rename(
+            columns={"_time": "time", "_value": "value", "_measurement": "measurement"}
+        )
     return result

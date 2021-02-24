@@ -1,7 +1,10 @@
+"""The main file of the plant module"""
 import click
 import pendulum
-from .status import status
+
 from .ls import ls
+from .status import status
+
 
 @click.group()
 def plant():
@@ -10,7 +13,7 @@ def plant():
 
     Use 'heaume' to start
     """
-    pass
+
 
 plant.add_command(status)
 plant.add_command(ls)
