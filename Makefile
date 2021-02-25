@@ -14,4 +14,4 @@ check: lint
 	@poetry run isort heaume_cli tests --check
 
 test:
-	@poetry run pytest --cov=certum --cov-config .coveragerc --cov-report=xml --cov-report=term tests/
+	@poetry run pytest --cov=heaume_cli --cov-config .coveragerc --cov-report=xml --cov-report=term tests/
